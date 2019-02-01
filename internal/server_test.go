@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ATest(t *testing.T) {
+func TestContinousIntegration(t *testing.T) {
 	result := MockTest()
 	assert.Equal(t, "ok", result)
 }
