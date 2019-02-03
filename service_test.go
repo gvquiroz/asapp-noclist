@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +11,61 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestUsersWithValidResponse(t *testing.T) {
+
+	users := `9757263792576857988
+	7789651288773276582
+	1628388650278268240`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == `/users` {
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, users)
+		}
+	}))
+	defer server.Close()
+
+	c := &BADSECClient{
+		Client:         &http.Client{},
+		BASDECEndpoint: server.URL,
+		UsersChecksum:  "mockCheckSum",
+	}
+
+	users, err := c.getUsers()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	usersJSON := fmt.Sprintf(`["9757263792576857988","\t7789651288773276582","\t1628388650278268240"]`)
+
+	assert.Equal(t, usersJSON, users)
+}
+
+func TestUsersWithInvalidServiceUnavaialable(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == `/users` {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	}))
+	defer server.Close()
+
+	c := &BADSECClient{
+		Client:         &http.Client{},
+		BASDECEndpoint: server.URL,
+		UsersChecksum:  "mockCheckSum",
+	}
+
+	_, err := c.getUsers()
+
+	if err == nil {
+		assert.Fail(t, "getUsers must get an error if service is Unavailable")
+	}
+
+	assert.Contains(t, err.Error(), "Invalid response from API")
+
+}
 func TestAuthWithValidResponse(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,11 +81,7 @@ func TestAuthWithValidResponse(t *testing.T) {
 		BASDECEndpoint: server.URL,
 	}
 
-	token, err := c.getAuthToken()
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	token, _ := c.getAuthToken()
 
 	assert.Equal(t, "token", token)
 }

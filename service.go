@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// BADSECClient Represents a interface to communicate with BADSEC API
 type BADSECClient struct {
 	UsersChecksum  string
 	Client         *http.Client
@@ -27,6 +28,11 @@ func (b BADSECClient) getUsers() (string, error) {
 
 	if err != nil {
 		return usersJSON, err
+	}
+
+	// Any response code other than 200 is marked as a failure
+	if response.StatusCode != http.StatusOK {
+		return usersJSON, errors.New("Invalid response from API ")
 	}
 
 	defer response.Body.Close()
@@ -49,6 +55,7 @@ func (b BADSECClient) getUsers() (string, error) {
 	return usersJSON, nil
 }
 
+// NewService returns a BADSECClient to interact with BADSEC API
 func NewService(APIEndpoint string) *BADSECClient {
 
 	c := &BADSECClient{
