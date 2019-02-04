@@ -9,7 +9,9 @@ func main() {
 
 	BADSECService := NewService("http://localhost:8888")
 
-	users, err := BADSECService.getUsers()
+	numberOfRetryAttemps := 3
+
+	users, err := BADSECService.getUsers(numberOfRetryAttemps)
 
 	if err != nil {
 		log.Fatal(err)

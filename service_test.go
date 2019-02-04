@@ -31,7 +31,9 @@ func TestUsersWithValidResponse(t *testing.T) {
 		UsersChecksum:  "mockCheckSum",
 	}
 
-	users, err := c.getUsers()
+	numberOfRetryAttemps := 3
+
+	users, err := c.getUsers(numberOfRetryAttemps)
 
 	if err != nil {
 		log.Fatal(err)
@@ -57,7 +59,9 @@ func TestUsersWithInvalidServiceUnavaialable(t *testing.T) {
 		UsersChecksum:  "mockCheckSum",
 	}
 
-	_, err := c.getUsers()
+	numberOfRetryAttemps := 2
+
+	_, err := c.getUsers(numberOfRetryAttemps)
 
 	if err == nil {
 		assert.Fail(t, "getUsers must get an error if service is Unavailable")
@@ -151,7 +155,8 @@ func TestUsersWithConnectionRefusedError(t *testing.T) {
 		UsersChecksum:  "mockCheckSum",
 	}
 
-	_, err := c.getUsers()
+	numberOfRetryAttemps := 0
+	_, err := c.getUsers(numberOfRetryAttemps)
 
 	if err == nil {
 		assert.Fail(t, "getUsers must get an error if service is Unavailable")

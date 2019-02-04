@@ -18,7 +18,7 @@ type BADSECClient struct {
 	BASDECEndpoint string
 }
 
-func (b BADSECClient) getUsers() (string, error) {
+func (b BADSECClient) getUsers(retryAttemps int) (string, error) {
 
 	req, err := http.NewRequest("GET", b.BASDECEndpoint+"/users", nil)
 	req.Header.Add("X-Request-Checksum", b.UsersChecksum)
@@ -32,6 +32,11 @@ func (b BADSECClient) getUsers() (string, error) {
 
 	// Any response code other than 200 is marked as a failure
 	if response.StatusCode != http.StatusOK {
+		if retryAttemps > 0 {
+			log.Println("[ Retrying ] Invalid response from API - Attemp number", retryAttemps)
+			return b.getUsers(retryAttemps - 1)
+		}
+
 		return usersJSON, errors.New("Invalid response from API ")
 	}
 
