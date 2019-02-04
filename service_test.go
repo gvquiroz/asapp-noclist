@@ -112,6 +112,54 @@ func TestAuthWithInvalidServiceUnavaialable(t *testing.T) {
 
 }
 
+func TestAuthWithConnectionRefusedError(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	}))
+
+	// Simulates that the server is not running
+	server.Close()
+
+	c := &BADSECClient{
+		Client:         &http.Client{},
+		BASDECEndpoint: server.URL,
+	}
+
+	_, err := c.getAuthToken(0)
+
+	if err == nil {
+		assert.Fail(t, "getAuthToken must get an error if service is Unavailable")
+	}
+
+	assert.Contains(t, err.Error(), "connect: connection refused")
+
+}
+
+func TestUsersWithConnectionRefusedError(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	}))
+
+	// Simulates that the server is not running
+	server.Close()
+
+	c := &BADSECClient{
+		Client:         &http.Client{},
+		BASDECEndpoint: server.URL,
+		UsersChecksum:  "mockCheckSum",
+	}
+
+	_, err := c.getUsers()
+
+	if err == nil {
+		assert.Fail(t, "getUsers must get an error if service is Unavailable")
+	}
+
+	assert.Contains(t, err.Error(), "connection refused")
+
+}
 func TestAuthWithInvalidServiceUnavaialableAndRetryAttemps(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
