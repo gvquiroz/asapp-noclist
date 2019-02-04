@@ -18,6 +18,7 @@ type BADSECClient struct {
 	BASDECEndpoint string
 }
 
+// getUsers receive the number of times that will try to attemp the request if the firstone fails. Number of request will be 1 + retryAttemps
 func (b BADSECClient) getUsers(retryAttemps int) (string, error) {
 
 	req, err := http.NewRequest("GET", b.BASDECEndpoint+"/users", nil)
@@ -74,6 +75,7 @@ func NewService(APIEndpoint string) *BADSECClient {
 
 }
 
+// getAuthToken receive the number of times that will try to attemp the request if the firstone fails. Number of request will be 1 + retryAttemps
 func (b BADSECClient) getAuthToken(retryAttemps int) (string, error) {
 	response, err := b.Client.Get(b.BASDECEndpoint + "/auth")
 	var token string

@@ -44,10 +44,13 @@ func TestUsersWithValidResponse(t *testing.T) {
 	assert.Equal(t, usersJSON, users)
 }
 
-func TestUsersWithInvalidServiceUnavaialable(t *testing.T) {
+func TestUsersWithInvalidServiceUnavaialableWithRetryAttemps(t *testing.T) {
+
+	numberOfRequest := 0
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.RequestURI == `/users` {
+			numberOfRequest++
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 	}))
@@ -60,14 +63,16 @@ func TestUsersWithInvalidServiceUnavaialable(t *testing.T) {
 	}
 
 	numberOfRetryAttemps := 2
-
 	_, err := c.getUsers(numberOfRetryAttemps)
 
 	if err == nil {
 		assert.Fail(t, "getUsers must get an error if service is Unavailable")
 	}
 
+	numberOfRequestExpected := 3
+
 	assert.Contains(t, err.Error(), "Invalid response from API")
+	assert.Equal(t, numberOfRequestExpected, numberOfRequest)
 
 }
 func TestAuthWithValidResponse(t *testing.T) {

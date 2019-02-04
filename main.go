@@ -9,7 +9,7 @@ func main() {
 
 	BADSECService := NewService("http://localhost:8888")
 
-	numberOfRetryAttemps := 3
+	numberOfRetryAttemps := 2
 
 	users, err := BADSECService.getUsers(numberOfRetryAttemps)
 
