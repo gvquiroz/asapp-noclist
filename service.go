@@ -83,9 +83,9 @@ func (b BADSECClient) getAuthToken(retryAttemps int) (string, error) {
 		if retryAttemps > 0 {
 			log.Println("[ Retrying ] Invalid response from API - Attemp number", retryAttemps)
 			return b.getAuthToken(retryAttemps - 1)
-		} else {
-			return token, errors.New("Invalid response from API ")
 		}
+
+		return token, errors.New("Invalid response from API ")
 
 	}
 
