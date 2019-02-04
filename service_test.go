@@ -81,7 +81,8 @@ func TestAuthWithValidResponse(t *testing.T) {
 		BASDECEndpoint: server.URL,
 	}
 
-	token, _ := c.getAuthToken()
+	numberOfRetryAttemps := 0
+	token, _ := c.getAuthToken(numberOfRetryAttemps)
 
 	assert.Equal(t, "token", token)
 }
@@ -101,7 +102,33 @@ func TestAuthWithInvalidServiceUnavaialable(t *testing.T) {
 		BASDECEndpoint: server.URL,
 	}
 
-	_, err := c.getAuthToken()
+	_, err := c.getAuthToken(0)
+
+	if err == nil {
+		assert.Fail(t, "getAuthToken must get an error if service is Unavailable")
+	}
+
+	assert.Contains(t, err.Error(), "Invalid response from API")
+
+}
+
+func TestAuthWithInvalidServiceUnavaialableAndRetryAttemps(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == `/auth` {
+			w.Header().Set("Badsec-Authentication-Token", "token")
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	}))
+	defer server.Close()
+
+	c := &BADSECClient{
+		Client:         &http.Client{},
+		BASDECEndpoint: server.URL,
+	}
+
+	numberOfRetryAttemps := 3
+	_, err := c.getAuthToken(numberOfRetryAttemps)
 
 	if err == nil {
 		assert.Fail(t, "getAuthToken must get an error if service is Unavailable")
@@ -124,7 +151,8 @@ func TestAuthWithoutAuthHeader(t *testing.T) {
 		BASDECEndpoint: server.URL,
 	}
 
-	_, err := c.getAuthToken()
+	numberOfRetryAttemps := 0
+	_, err := c.getAuthToken(numberOfRetryAttemps)
 
 	if err == nil {
 		assert.Fail(t, "getAuthToken must get an error if Auth Header is not present")
@@ -148,7 +176,8 @@ func TestAuthWithInvalidHeaderValue(t *testing.T) {
 		BASDECEndpoint: server.URL,
 	}
 
-	_, err := c.getAuthToken()
+	numberOfRetryAttemps := 0
+	_, err := c.getAuthToken(numberOfRetryAttemps)
 
 	if err == nil {
 		assert.Fail(t, "getAuthToken must get an error if Auth Header is invalid")

@@ -37,18 +37,10 @@ func (b BADSECClient) getUsers() (string, error) {
 
 	defer response.Body.Close()
 
-	bodyBytes, err := ioutil.ReadAll(response.Body)
-
-	if err != nil {
-		return usersJSON, err
-	}
+	bodyBytes, _ := ioutil.ReadAll(response.Body)
 
 	s := strings.Split(string(bodyBytes), "\n")
-	u, err := json.Marshal(s)
-
-	if err != nil {
-		return usersJSON, err
-	}
+	u, _ := json.Marshal(s)
 
 	usersJSON = string(u)
 
@@ -58,12 +50,14 @@ func (b BADSECClient) getUsers() (string, error) {
 // NewService returns a BADSECClient to interact with BADSEC API
 func NewService(APIEndpoint string) *BADSECClient {
 
+	retryAttepms := 3
+
 	c := &BADSECClient{
 		Client:         &http.Client{},
 		BASDECEndpoint: APIEndpoint,
 	}
 
-	token, err := c.getAuthToken()
+	token, err := c.getAuthToken(retryAttepms)
 
 	if err != nil {
 		log.Fatal(err)
@@ -75,7 +69,7 @@ func NewService(APIEndpoint string) *BADSECClient {
 
 }
 
-func (b BADSECClient) getAuthToken() (string, error) {
+func (b BADSECClient) getAuthToken(retryAttemps int) (string, error) {
 	response, err := b.Client.Get(b.BASDECEndpoint + "/auth")
 	var token string
 
@@ -85,7 +79,14 @@ func (b BADSECClient) getAuthToken() (string, error) {
 
 	// Any response code other than 200 is marked as a failure
 	if response.StatusCode != http.StatusOK {
-		return token, errors.New("Invalid response from API ")
+
+		if retryAttemps > 0 {
+			log.Println("[ Retrying ] Invalid response from API - Attemp number", retryAttemps)
+			return b.getAuthToken(retryAttemps - 1)
+		} else {
+			return token, errors.New("Invalid response from API ")
+		}
+
 	}
 
 	// We check if the header is present
